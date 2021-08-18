@@ -65,6 +65,10 @@ int main (int argc, char* argv[])
     glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 
 
+    float red = 1.0f;
+    float green = 1.0f;
+    float blue = 1.0f;
+
     // ----- Game loop
     bool quit = false;
     while (quit == false)
@@ -76,6 +80,13 @@ int main (int argc, char* argv[])
             {
                 quit = true;
                 break;
+            } else if (windowEvent.type == SDL_KEYDOWN)
+            {
+                if (windowEvent.key.keysym.sym == SDLK_SPACE) {
+                    red = randomColor();
+                    green = randomColor();
+                    blue = randomColor();
+                }
             }
         }
         
@@ -84,7 +95,7 @@ int main (int argc, char* argv[])
             do drawing here
         */
 
-        glClearColor(randomColor(), randomColor(), randomColor(), 1.0);
+        glClearColor(red, green, blue, 1.0);
         glClear(GL_COLOR_BUFFER_BIT);
         SDL_GL_SwapWindow(window);
 
