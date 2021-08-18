@@ -6,6 +6,7 @@
 #include <stdio.h>
 #include <stdbool.h>
 #include <math.h>
+#include <time.h>
 
 // opengl
 #include <GL/glew.h>
@@ -15,18 +16,17 @@
 // #include <SDL2/SDL_timer.h>
 // #include <SDL2/SDL_image.h>
 
-
-
 #define SCREEN_SIZE_X 800
 #define SCREEN_SIZE_Y 600
 
-
-int main (int argc, char* argv[])
+int main(int argc, char *argv[])
 {
+    //Seed rand
+    srand( time(NULL) );
 
     //Shader loading utility programs
-    void printProgramLog( GLuint program );
-    void printShaderLog( GLuint shader );
+    void printProgramLog(GLuint program);
+    void printShaderLog(GLuint shader);
 
     // ----- Initialize SDL
     if (SDL_Init(SDL_INIT_VIDEO) != 0)
@@ -36,7 +36,7 @@ int main (int argc, char* argv[])
     }
 
     // ----- Create window
-    SDL_Window* window = SDL_CreateWindow("My Game", SDL_WINDOWPOS_CENTERED, SDL_WINDOWPOS_CENTERED, SCREEN_SIZE_X, SCREEN_SIZE_Y, SDL_WINDOW_OPENGL | SDL_WINDOW_SHOWN);
+    SDL_Window *window = SDL_CreateWindow("My Game", SDL_WINDOWPOS_CENTERED, SDL_WINDOWPOS_CENTERED, SCREEN_SIZE_X, SCREEN_SIZE_Y, SDL_WINDOW_OPENGL | SDL_WINDOW_SHOWN);
     if (!window)
     {
         fprintf(stderr, "Error creating window.\n");
@@ -65,14 +65,36 @@ int main (int argc, char* argv[])
     glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 
 
-    float red = 1.0f;
-    float green = 1.0f;
-    float blue = 1.0f;
+    // Colors
+    float red = randomColor();
+    float green = randomColor();
+    float blue = randomColor();
+
+    // For measuring fps
+    unsigned int lastTime = SDL_GetTicks();
+    int nbFrames = 0;
 
     // ----- Game loop
     bool quit = false;
     while (quit == false)
     {
+
+        unsigned int currentTime = SDL_GetTicks();
+        unsigned int delta = currentTime - lastTime;
+        nbFrames++;
+
+        // FPS counter
+        if (delta >= 1000)
+        { // If last prinf() was more than 1 sec ago
+            // printf and reset timer
+            system("clear");
+            char *fpsCountText = (char* )malloc(50 * sizeof(char));
+            sprintf(fpsCountText, "My Game   %d fps\n", nbFrames);
+            SDL_SetWindowTitle(window, fpsCountText);
+            nbFrames = 0;
+            lastTime = currentTime;
+        }
+
         SDL_Event windowEvent;
         while (SDL_PollEvent(&windowEvent))
         {
@@ -80,9 +102,11 @@ int main (int argc, char* argv[])
             {
                 quit = true;
                 break;
-            } else if (windowEvent.type == SDL_KEYDOWN)
+            }
+            else if (windowEvent.type == SDL_KEYDOWN)
             {
-                if (windowEvent.key.keysym.sym == SDLK_SPACE) {
+                if (windowEvent.key.keysym.sym == SDLK_SPACE)
+                {
                     red = randomColor();
                     green = randomColor();
                     blue = randomColor();
@@ -90,15 +114,16 @@ int main (int argc, char* argv[])
             }
         }
         
-
         /*
             do drawing here
         */
 
+        // Fill with color
         glClearColor(red, green, blue, 1.0);
         glClear(GL_COLOR_BUFFER_BIT);
-        SDL_GL_SwapWindow(window);
 
+
+        //Swap background to foreground or something I don't know...
         SDL_GL_SwapWindow(window);
     }
 
