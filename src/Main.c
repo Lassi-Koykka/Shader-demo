@@ -16,30 +16,47 @@
 // #include <SDL2/SDL_timer.h>
 // #include <SDL2/SDL_image.h>
 
-#define SCREEN_SIZE_X 800
-#define SCREEN_SIZE_Y 600
+#define SCREEN_WIDTH 800
+#define SCREEN_HEIGHT 600
 
-int main(int argc, char *argv[])
-{
-    //Seed rand
-    srand( time(NULL) );
+//Starts up SDL, creates window, and initializes OpenGL
+int init();
 
-    //Shader loading utility programs
-    void printProgramLog(GLuint program);
-    void printShaderLog(GLuint shader);
 
+
+
+//Shader loading utility programs
+void printProgramLog(GLuint program);
+void printShaderLog(GLuint shader);
+
+// ----- Create window
+SDL_Window *window = NULL;
+
+// ----- SDL OpenGL context
+SDL_GLContext glContext;
+
+//Render flag
+bool gRenderQuad = true;
+
+//Graphics program
+GLuint gProgramID = 0;
+GLint gVertexPos2DLocation = -1;
+GLuint gVBO = 0;
+GLuint gIBO = 0;
+
+int init() {
     // ----- Initialize SDL
     if (SDL_Init(SDL_INIT_VIDEO) != 0)
     {
-        fprintf(stderr, "SDL could not initialize\n");
+        printf("SDL could not initialize! SDL Error: %s\n", SDL_GetError());
         return 1;
     }
 
     // ----- Create window
-    SDL_Window *window = SDL_CreateWindow("My Game", SDL_WINDOWPOS_CENTERED, SDL_WINDOWPOS_CENTERED, SCREEN_SIZE_X, SCREEN_SIZE_Y, SDL_WINDOW_OPENGL | SDL_WINDOW_SHOWN);
+    window = SDL_CreateWindow("My Game", SDL_WINDOWPOS_CENTERED, SDL_WINDOWPOS_CENTERED, SCREEN_WIDTH, SCREEN_HEIGHT, SDL_WINDOW_OPENGL | SDL_WINDOW_SHOWN);
     if (!window)
     {
-        fprintf(stderr, "Error creating window.\n");
+        printf("Window could not be created! SDL Error: %s\n", SDL_GetError());
         return 2;
     }
 
@@ -52,18 +69,42 @@ int main(int argc, char *argv[])
     SDL_GL_SetAttribute(SDL_GL_STENCIL_SIZE, 8);
 
     // ----- SDL OpenGL context
-    SDL_GLContext glContext = SDL_GL_CreateContext(window);
+    glContext = SDL_GL_CreateContext(window);
+    if (glContext == NULL)
+    {
+        printf("OpenGL context could not be created! SDL Error: %s\n", SDL_GetError());
+        return 3;
+    }
 
     // ----- SDL v-sync
-    SDL_GL_SetSwapInterval(1);
+    if (SDL_GL_SetSwapInterval(1) < 0)
+    {
+        printf("Warning: Unable to set VSync! SDL Error: %s\n", SDL_GetError());
+    }
 
     // ----- GLEW
-    glewInit();
+    GLenum glewError = glewInit();
+    if (glewError != GLEW_OK)
+    {
+        printf("Error initializing GLEW! %s\n", glewGetErrorString(glewError));
+    }
+
     glEnable(GL_DEPTH_TEST);
     glEnable(GL_TEXTURE_2D);
     glEnable(GL_BLEND);
     glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 
+
+    return 0;
+}
+
+
+int main(int argc, char *argv[])
+{
+    init();
+
+    //Seed rand
+    srand(time(NULL));
 
     // Colors
     float red = randomColor();
@@ -86,9 +127,8 @@ int main(int argc, char *argv[])
         // FPS counter
         if (delta >= 1000)
         { // If last prinf() was more than 1 sec ago
-            // printf and reset timer
-            system("clear");
-            char *fpsCountText = (char* )malloc(50 * sizeof(char));
+            // Set window counter and reset timer
+            char *fpsCountText = (char *)malloc(50 * sizeof(char));
             sprintf(fpsCountText, "My Game   %d fps\n", nbFrames);
             SDL_SetWindowTitle(window, fpsCountText);
             nbFrames = 0;
@@ -113,7 +153,7 @@ int main(int argc, char *argv[])
                 }
             }
         }
-        
+
         /*
             do drawing here
         */
@@ -121,7 +161,6 @@ int main(int argc, char *argv[])
         // Fill with color
         glClearColor(red, green, blue, 1.0);
         glClear(GL_COLOR_BUFFER_BIT);
-
 
         //Swap background to foreground or something I don't know...
         SDL_GL_SwapWindow(window);
