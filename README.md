@@ -1,1 +1,1 @@
-# SDL & OpenGL shader-demo written in C
+# SDL & OpenGL shader demo written in C
